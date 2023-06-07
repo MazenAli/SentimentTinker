@@ -8,7 +8,7 @@ import pickle
 
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.text import Tokenizer
-from keras.utils import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
 def unicode_to_ascii(s):
@@ -31,7 +31,7 @@ def preprocess_sentence(w):
 
 def read_and_preprocess_data(file_path):
     """Load data from csv file and preprocess the text."""
-    df = pd.read_csv(file_path, quotechar='"', on_bad_lines="skip")
+    df = pd.read_csv(file_path, quotechar='"', error_bad_lines=False)
     df["ProcessedText"] = df["SentimentText"].apply(preprocess_sentence)
     return df["ProcessedText"], df["Sentiment"]
 

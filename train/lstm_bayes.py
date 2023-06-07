@@ -109,7 +109,7 @@ def run(
 
     # Retrain the model with the optimal hyperparameters and the whole dataset
     model = tuner.hypermodel.build(best_hps)
-    log_dir = "../logs/sentiment/" + time.strftime("%Y%m%d-%H%M%S")
+    log_dir = "./logs/sentiment/" + time.strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
     history = model.fit(
         np.concatenate((X_train, X_valid)),

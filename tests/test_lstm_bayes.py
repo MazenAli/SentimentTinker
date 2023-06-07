@@ -39,3 +39,5 @@ def test_lstm_bayes(tmpdir):
     os.remove("sentiment_analysis_history.pkl")
     if os.path.exists("./bayesian_optimization"):
         shutil.rmtree("./bayesian_optimization")
+    if os.path.exists("./logs"):
+        shutil.rmtree("./logs")
