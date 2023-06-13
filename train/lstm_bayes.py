@@ -24,11 +24,11 @@ class HyperModel(keras_tuner.HyperModel):
         model.add(
             Embedding(
                 input_dim=self.num_words,
-                output_dim=hp.Int("output_dim", min_value=32, max_value=1024, step=32),
+                output_dim=hp.Int("output_dim", min_value=32, max_value=512, step=32),
                 input_length=self.max_sequence_length,
             )
         )
-        model.add(LSTM(hp.Int("lstm_units", min_value=32, max_value=256, step=32)))
+        model.add(LSTM(hp.Int("lstm_units", min_value=32, max_value=128, step=32)))
         model.add(Dense(1, activation="sigmoid"))
 
         optimizer = hp.Choice("optimizer", values=["adam", "rmsprop"])
@@ -48,7 +48,7 @@ class HyperModel(keras_tuner.HyperModel):
         model.compile(
             optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
         )
-        batch_size = hp.Int("batch_size", min_value=2, max_value=1024, step=32)
+        batch_size = hp.Int("batch_size", min_value=32, max_value=512, step=32)
         self.batch_size = batch_size
 
         return model
@@ -64,9 +64,9 @@ class HyperModel(keras_tuner.HyperModel):
 def run(
     dataset_location,
     num_words,
-    max_trials=100,
-    executions_per_trial=10,
-    epochs=1000,
+    max_trials=10,
+    executions_per_trial=1,
+    epochs=200,
 ):
     # Load the data
     with open(dataset_location, "rb") as f:
@@ -144,20 +144,20 @@ def parse_args():
     parser.add_argument(
         "--max_trials",
         type=int,
-        default=100,
-        help="Max number of hyperparameter trials. Default is 100.",
+        default=10,
+        help="Max number of hyperparameter trials. Default is 10.",
     )
     parser.add_argument(
         "--executions_per_trial",
         type=int,
-        default=10,
-        help="Number of executions per trial. Default is 10.",
+        default=1,
+        help="Number of executions per trial. Default is 1.",
     )
     parser.add_argument(
         "--epochs",
         type=int,
         default=1000,
-        help="Number of epochs to train. Default is 1000.",
+        help="Number of epochs to train. Default is 200.",
     )
     return parser.parse_args()
 
