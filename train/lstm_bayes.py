@@ -67,6 +67,7 @@ def run(
     max_trials=10,
     executions_per_trial=1,
     epochs=200,
+    skip2train=False,
 ):
     # Load the data
     with open(dataset_location, "rb") as f:
@@ -87,25 +88,32 @@ def run(
         project_name="sentiment_analysis",
     )
 
-    # Perform the hyperparameter search
-    tuner.search(
-        X_train, y_train, epochs=epochs, validation_data=(X_valid, y_valid), verbose=1
-    )
-
-    # Get the optimal hyperparameters
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-    print(
-        f"""
-    The hyperparameter search is complete.
-    The optimal number of units in the LSTM layer is {best_hps.get('lstm_units')},
-    the best optimizer is {best_hps.get('optimizer')}
-    and the optimal learning rate for the optimizer is {best_hps.get('learning_rate')}.
-    """
-    )
+    
+    # Perform the hyperparameter search
+    if not skip2train:
+        tuner.search(
+            X_train, y_train, epochs=epochs, validation_data=(X_valid, y_valid), verbose=1
+        )
 
-    # Save the optimal hyperparameters to a json file
-    with open("best_hyperparameters.json", "w") as f:
-        json.dump(best_hps.values, f)
+        # Get the optimal hyperparameters
+        best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+        print(
+        f"""
+        The hyperparameter search is complete.
+        The optimal number of units in the LSTM layer is {best_hps.get('lstm_units')},
+        the best optimizer is {best_hps.get('optimizer')}
+        and the optimal learning rate for the optimizer is {best_hps.get('learning_rate')}.
+        """
+        )
+    
+        # Save the optimal hyperparameters to a json file
+        with open("best_hyperparameters.json", "w") as f:
+            json.dump(best_hps.values, f)
+
+    # Load the optimal hyperparameters from a json file
+    with open("best_hyperparameters.json", "r") as f:
+        best_hps.values = json.load(f)
 
     # Retrain the model with the optimal hyperparameters and the whole dataset
     model = tuner.hypermodel.build(best_hps)
@@ -159,6 +167,12 @@ def parse_args():
         default=200,
         help="Number of epochs to train. Default is 200.",
     )
+    parser.add_argument(
+        "--skip2train",
+        type=bool,
+        default=False,
+        help="Skip to training directly. Default is False.",
+    )
     return parser.parse_args()
 
 
@@ -170,6 +184,7 @@ def main():
         args.max_trials,
         args.executions_per_trial,
         args.epochs,
+        args.skip2train,
     )
 
 
