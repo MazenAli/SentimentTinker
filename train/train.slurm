@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=test_lstm
-#SBATCH --output=test_lstm.out
+#SBATCH --output=test_lstm2.out
 
 # Use the gpu partition and request one GPU
 #SBATCH --partition=gpu
@@ -10,7 +10,7 @@
 #SBATCH --mem=16G
 
 # Set maximum run time
-#SBATCH --time=2-00:00:00
+#SBATCH --time=5-00:00:00
 
 # Node list
 #SBATCH --nodes=1
@@ -23,4 +23,4 @@ source activate $ENV
 cd /m/scratch/hive/alim/NLP/SentimentTinker/train
 
 # Run script
-python lstm_bayes.py /m/scratch/hive/alim/NLP/SentimentTinker/data/train_valid_test_data.pkl 10000 --skip2train True
+python lstm_bayes.py /m/scratch/hive/alim/NLP/SentimentTinker/data/train_valid_test_data.pkl 10000 --skip2train True --epochs 96

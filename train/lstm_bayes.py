@@ -122,6 +122,7 @@ def run(
     history = model.fit(
         np.concatenate((X_train, X_valid)),
         np.concatenate((y_train, y_valid)),
+        validation_data=(X_test, y_test),
         epochs=epochs,
         callbacks=[tensorboard_callback],
     )
