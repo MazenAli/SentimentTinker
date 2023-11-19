@@ -24,11 +24,11 @@ class HyperModel(keras_tuner.HyperModel):
         model.add(
             Embedding(
                 input_dim=self.num_words,
-                output_dim=hp.Int("output_dim", min_value=32, max_value=1024, step=32),
+                output_dim=hp.Int("output_dim", min_value=32, max_value=512, step=32),
                 input_length=self.max_sequence_length,
             )
         )
-        model.add(LSTM(hp.Int("lstm_units", min_value=32, max_value=256, step=32)))
+        model.add(LSTM(hp.Int("lstm_units", min_value=32, max_value=128, step=32)))
         model.add(Dense(1, activation="sigmoid"))
 
         optimizer = hp.Choice("optimizer", values=["adam", "rmsprop"])
@@ -48,7 +48,7 @@ class HyperModel(keras_tuner.HyperModel):
         model.compile(
             optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
         )
-        batch_size = hp.Int("batch_size", min_value=2, max_value=1024, step=32)
+        batch_size = hp.Int("batch_size", min_value=32, max_value=512, step=32)
         self.batch_size = batch_size
 
         return model
@@ -64,9 +64,10 @@ class HyperModel(keras_tuner.HyperModel):
 def run(
     dataset_location,
     num_words,
-    max_trials=100,
-    executions_per_trial=10,
-    epochs=1000,
+    max_trials=10,
+    executions_per_trial=1,
+    epochs=200,
+    skip2train=False,
 ):
     # Load the data
     with open(dataset_location, "rb") as f:
@@ -87,33 +88,41 @@ def run(
         project_name="sentiment_analysis",
     )
 
-    # Perform the hyperparameter search
-    tuner.search(
-        X_train, y_train, epochs=epochs, validation_data=(X_valid, y_valid), verbose=1
-    )
-
-    # Get the optimal hyperparameters
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-    print(
-        f"""
-    The hyperparameter search is complete.
-    The optimal number of units in the LSTM layer is {best_hps.get('lstm_units')},
-    the best optimizer is {best_hps.get('optimizer')}
-    and the optimal learning rate for the optimizer is {best_hps.get('learning_rate')}.
-    """
-    )
+    
+    # Perform the hyperparameter search
+    if not skip2train:
+        tuner.search(
+            X_train, y_train, epochs=epochs, validation_data=(X_valid, y_valid), verbose=1
+        )
 
-    # Save the optimal hyperparameters to a json file
-    with open("best_hyperparameters.json", "w") as f:
-        json.dump(best_hps.values, f)
+        # Get the optimal hyperparameters
+        best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+        print(
+        f"""
+        The hyperparameter search is complete.
+        The optimal number of units in the LSTM layer is {best_hps.get('lstm_units')},
+        the best optimizer is {best_hps.get('optimizer')}
+        and the optimal learning rate for the optimizer is {best_hps.get('learning_rate')}.
+        """
+        )
+    
+        # Save the optimal hyperparameters to a json file
+        with open("best_hyperparameters.json", "w") as f:
+            json.dump(best_hps.values, f)
+
+    # Load the optimal hyperparameters from a json file
+    with open("best_hyperparameters.json", "r") as f:
+        best_hps.values = json.load(f)
 
     # Retrain the model with the optimal hyperparameters and the whole dataset
     model = tuner.hypermodel.build(best_hps)
-    log_dir = "../logs/sentiment/" + time.strftime("%Y%m%d-%H%M%S")
+    log_dir = "./logs/sentiment/" + time.strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
     history = model.fit(
         np.concatenate((X_train, X_valid)),
         np.concatenate((y_train, y_valid)),
+        validation_data=(X_test, y_test),
         epochs=epochs,
         callbacks=[tensorboard_callback],
     )
@@ -144,20 +153,26 @@ def parse_args():
     parser.add_argument(
         "--max_trials",
         type=int,
-        default=100,
-        help="Max number of hyperparameter trials. Default is 100.",
+        default=10,
+        help="Max number of hyperparameter trials. Default is 10.",
     )
     parser.add_argument(
         "--executions_per_trial",
         type=int,
-        default=10,
-        help="Number of executions per trial. Default is 10.",
+        default=1,
+        help="Number of executions per trial. Default is 1.",
     )
     parser.add_argument(
         "--epochs",
         type=int,
-        default=1000,
-        help="Number of epochs to train. Default is 1000.",
+        default=200,
+        help="Number of epochs to train. Default is 200.",
+    )
+    parser.add_argument(
+        "--skip2train",
+        type=bool,
+        default=False,
+        help="Skip to training directly. Default is False.",
     )
     return parser.parse_args()
 
@@ -170,6 +185,7 @@ def main():
         args.max_trials,
         args.executions_per_trial,
         args.epochs,
+        args.skip2train,
     )
 
 
