@@ -1,13 +1,32 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disables GPU usage
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template
 import unicodedata, re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 
 app = Flask(__name__)
+model = load_model('app/sentiment_analysis_model.h5')
+with open('app/tokenizer.pkl', 'rb') as handle:
+    tokenizer = pickle.load(handle)
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        # Extract text from the form
+        text = request.form['text']
+
+        # Get the prediction
+        prediction = predict_sentiment(text)
+
+        # Render the template with the prediction result
+        return render_template('result.html', prediction=prediction)
+
+    # For a GET request, just render the form
+    return render_template('index.html')
+
     
 def unicode_to_ascii(s):
     return "".join(
@@ -24,10 +43,6 @@ def preprocess_sentence(w):
     return w
 
 def predict_sentiment(text):
-    model = load_model('app/sentiment_analysis_model.h5')
-    with open('app/tokenizer.pkl', 'rb') as handle:
-        tokenizer = pickle.load(handle)
-
     # Preprocess the input text
     processed_text = preprocess_sentence(text)
 
@@ -40,18 +55,6 @@ def predict_sentiment(text):
     prediction_label = 'Positive' if prediction[0][0] > 0.5 else 'Negative'
 
     return prediction_label
-
-@app.route('/', methods=['POST'])
-def predict():
-    # Extract text from the POST request
-    data = request.get_json(force=True)
-    text = data['text']
-
-    # Get the prediction
-    prediction = predict_sentiment(text)
-
-    # Return a JSON response
-    return jsonify({'sentiment': prediction})
 
 if __name__ == '__main__':
     app.run(debug=False)
