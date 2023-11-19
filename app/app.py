@@ -8,9 +8,6 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 
 app = Flask(__name__)
-model = load_model('app/sentiment_analysis_model.h5')
-with open('app/tokenizer.pkl', 'rb') as handle:
-    tokenizer = pickle.load(handle)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -45,6 +42,10 @@ def preprocess_sentence(w):
 def predict_sentiment(text):
     # Preprocess the input text
     processed_text = preprocess_sentence(text)
+    
+    model = load_model('app/sentiment_analysis_model.h5')
+    with open('app/tokenizer.pkl', 'rb') as handle:
+        tokenizer = pickle.load(handle)
 
     # Tokenize and pad the processed text
     sequences = tokenizer.texts_to_sequences([processed_text])
