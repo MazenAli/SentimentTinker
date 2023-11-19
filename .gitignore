@@ -82,8 +82,6 @@ ipython_config.py
 # Datasets and other large files
 *.csv
 *.xlsx
-*.h5
 *.npy
 *.npz
-*.pkl
 logs/
