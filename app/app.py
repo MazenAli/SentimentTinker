@@ -24,8 +24,8 @@ def preprocess_sentence(w):
     return w
 
 def predict_sentiment(text):
-    model = load_model('sentiment_analysis_model.h5')
-    with open('tokenizer.pkl', 'rb') as handle:
+    model = load_model('app/sentiment_analysis_model.h5')
+    with open('app/tokenizer.pkl', 'rb') as handle:
         tokenizer = pickle.load(handle)
 
     # Preprocess the input text
