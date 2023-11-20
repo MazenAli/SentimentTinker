@@ -1,11 +1,21 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Disables GPU usage
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+import psutil
 from flask import Flask, request, render_template
 import unicodedata, re
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
+
+tf.get_logger().setLevel('ERROR') 
+
+model = load_model('app/sentiment_analysis_model.h5')
+with open('app/tokenizer.pkl', 'rb') as handle:
+    tokenizer = pickle.load(handle)
 
 app = Flask(__name__)
 
@@ -39,13 +49,14 @@ def preprocess_sentence(w):
     w = "<start> " + w + " <end>"
     return w
 
+def log_memory_usage():
+    process = psutil.Process(os.getpid())
+    print(f"Memory Usage: {process.memory_info().rss / 1024 ** 2:.2f} MB")
+
 def predict_sentiment(text):
+    log_memory_usage()
     # Preprocess the input text
     processed_text = preprocess_sentence(text)
-    
-    model = load_model('app/sentiment_analysis_model.h5')
-    with open('app/tokenizer.pkl', 'rb') as handle:
-        tokenizer = pickle.load(handle)
 
     # Tokenize and pad the processed text
     sequences = tokenizer.texts_to_sequences([processed_text])
@@ -58,4 +69,4 @@ def predict_sentiment(text):
     return prediction_label
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
