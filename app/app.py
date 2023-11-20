@@ -12,11 +12,6 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 
 tf.get_logger().setLevel('ERROR') 
-
-model = load_model('app/sentiment_analysis_model.h5')
-with open('app/tokenizer.pkl', 'rb') as handle:
-    tokenizer = pickle.load(handle)
-
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
@@ -52,6 +47,14 @@ def preprocess_sentence(w):
 def log_memory_usage():
     process = psutil.Process(os.getpid())
     print(f"Memory Usage: {process.memory_info().rss / 1024 ** 2:.2f} MB")
+    
+log_memory_usage()
+
+model = load_model('app/sentiment_analysis_model.h5')
+with open('app/tokenizer.pkl', 'rb') as handle:
+    tokenizer = pickle.load(handle)
+    
+log_memory_usage()
 
 def predict_sentiment(text):
     log_memory_usage()
