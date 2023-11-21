@@ -48,15 +48,18 @@ def log_memory_usage():
     process = psutil.Process(os.getpid())
     print(f"Memory Usage: {process.memory_info().rss / 1024 ** 2:.2f} MB")
     
+print("Memory usage BEFORE loading model and tokenizer")    
 log_memory_usage()
 
 model = load_model('app/sentiment_analysis_model.h5')
 with open('app/tokenizer.pkl', 'rb') as handle:
     tokenizer = pickle.load(handle)
     
+print("Memory usage AFTER loading model and tokenizer")    
 log_memory_usage()
 
 def predict_sentiment(text):
+    print("Memory usage BEFORE prediction")  
     log_memory_usage()
     # Preprocess the input text
     processed_text = preprocess_sentence(text)
@@ -69,7 +72,9 @@ def predict_sentiment(text):
     prediction = model.predict(padded_sequences)
     prediction_label = 'Positive' if prediction[0][0] > 0.5 else 'Negative'
 
+    print("Memory usage AFTER prediction")
+    log_memory_usage()  
     return prediction_label
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
