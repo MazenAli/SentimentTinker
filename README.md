@@ -1,6 +1,6 @@
 # SentimentTinker
 Just me fooling around with some models for sentiment analysis...
 
-Deployed at: https://sentimenttinker-production.up.railway.app/
+Deployed at: https://sentimenttinker.up.railway.app/
 
 Will probably remove soon...
